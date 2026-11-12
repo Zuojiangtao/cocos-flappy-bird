@@ -1,4 +1,4 @@
-import { _decorator, Component, Label, math, Node } from 'cc';
+import { _decorator, Component, director, Label, math, Node } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameOverUI')
@@ -25,6 +25,10 @@ export class GameOverUI extends Component {
 
     public hide() {
         this.node.active = false;
+    }
+
+    onReplay() {
+        director.loadScene(director.getScene().name);
     }
 }
 
