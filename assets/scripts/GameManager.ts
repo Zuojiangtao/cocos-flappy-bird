@@ -2,6 +2,7 @@ import { _decorator, Component } from 'cc';
 import { BacgroundController } from './BacgroundController';
 import { BirdController } from './BirdController';
 import { PipeSpawn } from './PipeSpawn';
+import { GameReadyUI } from './UI/GameReadyUI';
 const { ccclass, property } = _decorator;
 
 enum GameState {
@@ -27,6 +28,8 @@ export class GameManager extends Component {
     floorMoving: BacgroundController = null;
     @property(PipeSpawn)
     pipeSpawn: PipeSpawn = null;
+    @property(GameReadyUI)
+    gameReadyUI: GameReadyUI = null;
 
     currentState: GameState = GameState.Ready;
 
@@ -64,6 +67,10 @@ export class GameManager extends Component {
         this.backgroundMoving.enableMovement(); // 禁用背景的移动
         this.floorMoving.enableMovement(); // 禁用地面的移动
         this.pipeSpawn.resumeSpawning(); // 恢复管道生成
+        // 隐藏游戏准备界面
+        if (this.gameReadyUI) {
+            this.gameReadyUI.node.active = false;
+        }
     }
     transitionToGameOverState() {
         this.currentState = GameState.GameOver;

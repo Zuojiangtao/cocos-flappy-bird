@@ -44,6 +44,12 @@ export class BirdController extends Component {
 
     onDestroy() {
         input.off(Input.EventType.TOUCH_START, this.onTouchStart, this);
+        // 注销碰撞体的回调函数
+        let collider = this.getComponent(Collider2D);
+        if (collider) {
+            collider.on(Contact2DType.BEGIN_CONTACT, this.onBeginContact, this);
+            collider.on(Contact2DType.END_CONTACT, this.onEndContact, this);
+        }
     }
 
     onTouchStart() {
