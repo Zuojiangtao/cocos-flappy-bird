@@ -24,17 +24,18 @@ export class PipeSpawn extends Component {
     spawnOnStart: boolean = true;
 
     private timer: number = 0;
+    private _isSpawning: boolean = false;
 
     start() {
         // 开局立刻生成一根管道，避免玩家一开始就看到空荡荡的屏幕
-        if (this.spawnOnStart) {
+        if (this.spawnOnStart && this._isSpawning) {
             this.spawnPipe();
             this.timer = 0;
         }
     }
 
     update(deltaTime: number) {
-        if (!this.pipePrefab) return;
+        if (!this._isSpawning) return;
 
         this.timer += deltaTime;
         if (this.timer < this.spawnInterval) return;
@@ -54,5 +55,13 @@ export class PipeSpawn extends Component {
         this.node.addChild(pipeNode); // 加到生成器节点下，位置以生成器为原点
         // 生成器节点就是出生点：x 固定为 0（跟随生成器），y 做随机上下偏移
         pipeNode.setPosition(0, math.randomRangeInt(-100, 200), 0);
+    }
+
+    public pauseSpawning() {
+        this._isSpawning = false;
+    }
+
+    public resumeSpawning() {
+        this._isSpawning = true;
     }
 }
