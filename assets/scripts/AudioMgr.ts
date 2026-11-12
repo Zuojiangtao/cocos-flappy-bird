@@ -69,14 +69,17 @@ export class AudioMgr {
      * @zh
      * 播放长音频，比如 背景音乐
      * @param sound clip or url for the sound
-     * @param volume 
+     * @param volume
+     * @param loop 是否循环播放，背景音乐默认循环
      */
-    play(sound: AudioClip | string, volume: number = 1.0) {
+    play(sound: AudioClip | string, volume: number = 1.0, loop: boolean = true) {
         if (sound instanceof AudioClip) {
             this._audioSource.stop();
             this._audioSource.clip = sound;
+            // AudioSource.play() 默认只播一遍，背景音乐必须显式打开 loop
+            this._audioSource.loop = loop;
+            this._audioSource.volume = volume;
             this._audioSource.play();
-            this.audioSource.volume = volume;
         }
         else {
             resources.load(sound, (err, clip: AudioClip) => {
@@ -86,8 +89,9 @@ export class AudioMgr {
                 else {
                     this._audioSource.stop();
                     this._audioSource.clip = clip;
+                    this._audioSource.loop = loop;
+                    this._audioSource.volume = volume;
                     this._audioSource.play();
-                    this.audioSource.volume = volume;
                 }
             });
         }

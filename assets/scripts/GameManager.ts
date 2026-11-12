@@ -6,6 +6,7 @@ import { GameReadyUI } from './UI/GameReadyUI';
 import { GameData } from './GameData';
 import { GameOverUI } from './UI/GameOverUI';
 import { AudioMgr } from './AudioMgr';
+import { ScreenAdapter } from './ScreenAdapter';
 const { ccclass, property } = _decorator;
 
 enum GameState {
@@ -53,6 +54,9 @@ export class GameManager extends Component {
     }
 
     start() {
+        // 长屏适配：背景铺满上下、地面贴底，去掉模拟器/手机上下的黑边
+        ScreenAdapter.fit(this.node.parent);
+
         // 统一把速度下发给背景/地面：
         // 它们不再反向 import GameManager，这样两边就不会形成循环依赖
         if (this.backgroundMoving) {
@@ -73,6 +77,8 @@ export class GameManager extends Component {
     transitionToReadyState() {
         this.currentState = GameState.Ready; // 游戏状态切换为准备中
 
+        GameData.resetScore(); // 重新开局，分数从 0 开始
+
         this.bird.disableControl(); // 禁用小鸟的控制
         this.backgroundMoving.disableMovement(); // 禁用背景的移动
         this.floorMoving.disableMovement(); // 禁用地面的移动
@@ -86,6 +92,7 @@ export class GameManager extends Component {
         this.currentState = GameState.Playing; // 游戏状态切换为进行中
 
         this.bird.enableControl(); // 启用小鸟的控制
+        this.bird.flap(); // 触发游戏的第一下点击也要扇翅膀，否则开局会直接往下掉
         this.backgroundMoving.enableMovement(); // 启用背景的移动
         this.floorMoving.enableMovement(); // 启用地面的移动
         this.pipeSpawn.resumeSpawning(); // 恢复管道生成
@@ -108,11 +115,14 @@ export class GameManager extends Component {
        
         this.gameReadyUI?.hide();
         this.gamingUI.active = false; // 隐藏游戏进行界面
-        this.gameOverUI?.show(GameData.getScore(), GameData.getBestScore()); // 显示游戏结束界面
 
-        // 结算分数
-        GameData.setScore();
-        // over 音效
+        // 先把分数保存下来并拿到最新的最高分，再显示结算界面，
+        // 这样结算界面上的 BEST 就是本局刷新后的值（以前显示的是旧值）
+        const currentScore = GameData.getScore();
+        const bestScore = GameData.setScore();
+        this.gameOverUI?.show(currentScore, bestScore); // 显示游戏结束界面
+
+        // game over：先停 BGM，再播结算音效
         AudioMgr.inst.stop();
         AudioMgr.inst.playOneShot(this.gameOverAudio);
     }

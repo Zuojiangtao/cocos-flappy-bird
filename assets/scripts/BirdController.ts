@@ -60,8 +60,15 @@ export class BirdController extends Component {
     }
 
     onTouchStart() {
-        if (!this._isControlEnabled) return;
-        // 点击给小鸟Y轴一个向上的速度
+        // 点击给小鸟 Y 轴一个向上的速度（第一次点击时还没 enableControl，
+        // 由 GameManager.transitionToPlayingState 在切状态后调用 flap()）
+        this.flap();
+    }
+
+    /** 扇一下翅膀：给一个向上的速度，并播放点击音效 */
+    public flap() {
+        if (!this._isControlEnabled || !this.Red2D) return;
+
         this.Red2D.linearVelocity = new Vec2(0, 10);
         this.node.angle = 30; // 点击时小鸟向上倾斜30度
 
