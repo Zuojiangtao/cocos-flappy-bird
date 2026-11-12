@@ -11,7 +11,7 @@ export class BacgroundController extends Component {
     private bgWidth: number = 0;
 
     start() {
-        this.speed = GameManager.score.moveSpeed; // 获取 GameManager 中的 moveSpeed
+        this.speed = GameManager.instance().moveSpeed; // 获取 GameManager 中的 moveSpeed
         const bg1Transform = this.bg1.getComponent(UITransform);
         this.bgWidth = bg1Transform.contentSize.width; // 获取背景图片的宽度
 

@@ -3,16 +3,16 @@ const { ccclass, property } = _decorator;
 
 @ccclass('GameManager')
 export class GameManager extends Component {
-    private static _score: GameManager = null;
-    public static get score() {
-        return GameManager._score;
+    private static _instance: GameManager = null;
+    public static instance() {
+        return GameManager._instance;
     }
 
     @property
     moveSpeed: number = 100;
 
     onLoad() {
-        GameManager._score = this;
+        GameManager._instance = this;
     }
 
     update(deltaTime: number) {
