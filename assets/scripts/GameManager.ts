@@ -89,16 +89,20 @@ export class GameManager extends Component {
         this.gamingScore.string = GameData.getScore().toString(); // 初始化分数显示
     }
     transitionToGameOverState() {
+        if(this.currentState === GameState.GameOver) return;
+
         this.currentState = GameState.GameOver; // 游戏状态切换为游戏结束
 
-        this.bird.disableControl(); // 禁用小鸟的控制
+        this.bird.disableControlNotRGD(); // 禁用小鸟的控制
         this.backgroundMoving.disableMovement(); // 禁用背景的移动
         this.floorMoving.disableMovement(); // 禁用地面的移动
         this.pipeSpawn.pauseSpawning(); // 暂停管道生成
        
         this.gameReadyUI?.hide();
         this.gamingUI.active = false; // 隐藏游戏进行界面
-        this.gameOverUI?.show(0, 0); // 显示游戏结束界面
+        this.gameOverUI?.show(GameData.getScore(), GameData.getBestScore()); // 显示游戏结束界面
+
+        GameData.setScore();
     }
 
     addScore(count: number = 1) {

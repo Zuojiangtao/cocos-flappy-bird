@@ -72,6 +72,11 @@ export class BirdController extends Component {
         this._Animation.enabled = false; // 停止动画
     }
 
+    public disableControlNotRGD() {
+        this._isControlEnabled = false;
+        this._Animation.enabled = false; // 停止动画
+    }
+
     onBeginContact(selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {
         console.log("碰撞开始::==================");
         console.log("碰撞的对象是: " + otherCollider.node.name, "碰撞的对象的tag是: " + otherCollider.tag);
