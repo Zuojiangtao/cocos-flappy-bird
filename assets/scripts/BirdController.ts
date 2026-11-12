@@ -1,4 +1,6 @@
 import { _decorator, Collider2D, Component, Contact2DType, input, Input, IPhysics2DContact, RigidBody2D, Vec2, Animation } from 'cc';
+import { GameManager } from './GameManager';
+import { Tags } from './Tags';
 const { ccclass, property } = _decorator;
 
 @ccclass('BirdController')
@@ -81,6 +83,11 @@ export class BirdController extends Component {
     }
     onEndContact(selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {
         console.log("碰撞结束::");
+        if (otherCollider.tag === Tags.SCORE) {
+            console.log("通过管道，得分");
+            // 在这里可以添加得分的逻辑，比如增加分数、更新UI等
+            GameManager.instance().addScore();
+        }
     }
 }
 

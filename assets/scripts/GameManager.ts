@@ -1,8 +1,9 @@
-import { _decorator, Component } from 'cc';
+import { _decorator, Component, Label, Node } from 'cc';
 import { BacgroundController } from './BacgroundController';
 import { BirdController } from './BirdController';
 import { PipeSpawn } from './PipeSpawn';
 import { GameReadyUI } from './UI/GameReadyUI';
+import { GameData } from './GameData';
 const { ccclass, property } = _decorator;
 
 enum GameState {
@@ -30,6 +31,10 @@ export class GameManager extends Component {
     pipeSpawn: PipeSpawn = null;
     @property(GameReadyUI)
     gameReadyUI: GameReadyUI = null;
+    @property(Node)
+    gamingUI: Node = null;
+    @property(Label)
+    gamingScore: Label = null;
 
     currentState: GameState = GameState.Ready;
 
@@ -60,6 +65,10 @@ export class GameManager extends Component {
         this.backgroundMoving.disableMovement(); // 启用背景的移动
         this.floorMoving.disableMovement(); // 启用地面的移动
         this.pipeSpawn.pauseSpawning(); // 暂停管道生成
+        this.gamingUI.active = false; // 隐藏游戏进行界面
+        if (this.gameReadyUI) {
+            this.gameReadyUI.node.active = true; // 显示游戏准备界面
+        }
     }
     transitionToPlayingState() {
         this.currentState = GameState.Playing;
@@ -67,6 +76,8 @@ export class GameManager extends Component {
         this.backgroundMoving.enableMovement(); // 禁用背景的移动
         this.floorMoving.enableMovement(); // 禁用地面的移动
         this.pipeSpawn.resumeSpawning(); // 恢复管道生成
+        this.gamingUI.active = true; // 显示游戏进行界面
+        this.gamingScore.string = GameData.getScore().toString(); // 初始化分数显示
         // 隐藏游戏准备界面
         if (this.gameReadyUI) {
             this.gameReadyUI.node.active = false;
@@ -78,5 +89,10 @@ export class GameManager extends Component {
         this.backgroundMoving.disableMovement(); // 禁用背景的移动
         this.floorMoving.disableMovement(); // 禁用地面的移动
         this.pipeSpawn.pauseSpawning(); // 暂停管道生成
+    }
+
+    addScore(count: number = 1) {
+        GameData.addScore(count);
+        this.gamingScore.string = GameData.getScore().toString();
     }
 }
