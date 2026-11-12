@@ -20,11 +20,17 @@ export class PipeSpawn extends Component {
     @property({ tooltip: '生成间隔（秒）；实际间距 = 该值 × 管道移动速度' })
     spawnInterval: number = 1.5;
 
+    @property({ tooltip: '开局是否立刻生成第一根管道（否则要等一个 spawnInterval 才出现）' })
+    spawnOnStart: boolean = true;
+
     private timer: number = 0;
 
     start() {
-        // 打印运行时真正生效的值，方便确认用的是场景里的值还是脚本默认值
-        console.log(`[PipeSpawn] 实际生效的 spawnInterval = ${this.spawnInterval} 秒`);
+        // 开局立刻生成一根管道，避免玩家一开始就看到空荡荡的屏幕
+        if (this.spawnOnStart) {
+            this.spawnPipe();
+            this.timer = 0;
+        }
     }
 
     update(deltaTime: number) {
