@@ -16,6 +16,14 @@ export class GameReadyUI extends Component {
         // 触摸屏幕时，切换到游戏进行状态
         GameManager.instance().transitionToPlayingState();
     }
+
+    public show() {
+        this.node.active = true;
+    }
+
+    public hide() {
+        this.node.active = false;
+    }
 }
 
 

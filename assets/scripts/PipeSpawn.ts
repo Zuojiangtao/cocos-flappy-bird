@@ -1,4 +1,5 @@
-import { _decorator, Component, instantiate, math, Prefab } from 'cc';
+import { _decorator, Component, instantiate, log, math, Prefab } from 'cc';
+import { PipeController as Pipe } from './PipeController';
 const { ccclass, property } = _decorator;
 
 @ccclass('PipeSpawn')
@@ -59,6 +60,12 @@ export class PipeSpawn extends Component {
 
     public pauseSpawning() {
         this._isSpawning = false;
+
+        // 暂停生成时，已生成的管道也要停止移动
+        this.node.children.forEach(item => {
+            const pipeNode = item.getComponent(Pipe);
+            if(pipeNode) pipeNode.enabled = false;
+        });
     }
 
     public resumeSpawning() {

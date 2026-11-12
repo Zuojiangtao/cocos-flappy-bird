@@ -76,9 +76,10 @@ export class BirdController extends Component {
         console.log("碰撞开始::==================");
         console.log("碰撞的对象是: " + otherCollider.node.name, "碰撞的对象的tag是: " + otherCollider.tag);
         // 碰撞检测逻辑
-        if (otherCollider.node.name === "Floor" || otherCollider.node.name === "Pipe") {
+        if (otherCollider.tag === Tags.FLOOR || otherCollider.tag === Tags.PIPE) {
             console.log("游戏结束");
             // 在这里可以添加游戏结束的逻辑，比如停止游戏、显示游戏结束界面等
+            GameManager.instance().transitionToGameOverState();
         }
     }
     onEndContact(selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {

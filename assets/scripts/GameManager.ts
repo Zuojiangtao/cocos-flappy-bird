@@ -4,6 +4,7 @@ import { BirdController } from './BirdController';
 import { PipeSpawn } from './PipeSpawn';
 import { GameReadyUI } from './UI/GameReadyUI';
 import { GameData } from './GameData';
+import { GameOverUI } from './UI/GameOverUI';
 const { ccclass, property } = _decorator;
 
 enum GameState {
@@ -35,6 +36,8 @@ export class GameManager extends Component {
     gamingUI: Node = null;
     @property(Label)
     gamingScore: Label = null;
+    @property(GameOverUI)
+    gameOverUI: GameOverUI = null;
 
     currentState: GameState = GameState.Ready;
 
@@ -60,35 +63,42 @@ export class GameManager extends Component {
     }
 
     transitionToReadyState() {
-        this.currentState = GameState.Ready;
-        this.bird.disableControl(); // 启用小鸟的控制
-        this.backgroundMoving.disableMovement(); // 启用背景的移动
-        this.floorMoving.disableMovement(); // 启用地面的移动
-        this.pipeSpawn.pauseSpawning(); // 暂停管道生成
-        this.gamingUI.active = false; // 隐藏游戏进行界面
-        if (this.gameReadyUI) {
-            this.gameReadyUI.node.active = true; // 显示游戏准备界面
-        }
-    }
-    transitionToPlayingState() {
-        this.currentState = GameState.Playing;
-        this.bird.enableControl(); // 禁用小鸟的控制
-        this.backgroundMoving.enableMovement(); // 禁用背景的移动
-        this.floorMoving.enableMovement(); // 禁用地面的移动
-        this.pipeSpawn.resumeSpawning(); // 恢复管道生成
-        this.gamingUI.active = true; // 显示游戏进行界面
-        this.gamingScore.string = GameData.getScore().toString(); // 初始化分数显示
-        // 隐藏游戏准备界面
-        if (this.gameReadyUI) {
-            this.gameReadyUI.node.active = false;
-        }
-    }
-    transitionToGameOverState() {
-        this.currentState = GameState.GameOver;
+        this.currentState = GameState.Ready; // 游戏状态切换为准备中
+
         this.bird.disableControl(); // 禁用小鸟的控制
         this.backgroundMoving.disableMovement(); // 禁用背景的移动
         this.floorMoving.disableMovement(); // 禁用地面的移动
         this.pipeSpawn.pauseSpawning(); // 暂停管道生成
+
+        this.gameReadyUI?.show(); // 显示游戏准备界面
+        this.gamingUI.active = false; // 隐藏游戏进行界面
+        this.gameOverUI?.hide(); // 隐藏游戏结束界面
+    }
+    transitionToPlayingState() {
+        this.currentState = GameState.Playing; // 游戏状态切换为进行中
+
+        this.bird.enableControl(); // 启用小鸟的控制
+        this.backgroundMoving.enableMovement(); // 启用背景的移动
+        this.floorMoving.enableMovement(); // 启用地面的移动
+        this.pipeSpawn.resumeSpawning(); // 恢复管道生成
+
+        this.gameReadyUI?.hide(); // 隐藏游戏准备界面
+        this.gamingUI.active = true; // 显示游戏进行界面
+        this.gameOverUI?.hide(); // 隐藏游戏结束界面
+
+        this.gamingScore.string = GameData.getScore().toString(); // 初始化分数显示
+    }
+    transitionToGameOverState() {
+        this.currentState = GameState.GameOver; // 游戏状态切换为游戏结束
+
+        this.bird.disableControl(); // 禁用小鸟的控制
+        this.backgroundMoving.disableMovement(); // 禁用背景的移动
+        this.floorMoving.disableMovement(); // 禁用地面的移动
+        this.pipeSpawn.pauseSpawning(); // 暂停管道生成
+       
+        this.gameReadyUI?.hide();
+        this.gamingUI.active = false; // 隐藏游戏进行界面
+        this.gameOverUI?.show(0, 0); // 显示游戏结束界面
     }
 
     addScore(count: number = 1) {
