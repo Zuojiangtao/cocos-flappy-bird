@@ -1,6 +1,7 @@
-import { _decorator, Collider2D, Component, Contact2DType, input, Input, IPhysics2DContact, RigidBody2D, Vec2, Animation } from 'cc';
+import { _decorator, Collider2D, Component, Contact2DType, input, Input, IPhysics2DContact, RigidBody2D, Vec2, Animation, AudioClip } from 'cc';
 import { GameManager } from './GameManager';
 import { Tags } from './Tags';
+import { AudioMgr } from './AudioMgr';
 const { ccclass, property } = _decorator;
 
 @ccclass('BirdController')
@@ -10,6 +11,10 @@ export class BirdController extends Component {
 
     @property
     rorateSpeed: number = 60; // 小鸟旋转速度
+    @property(AudioClip)
+    clickAudio: AudioClip = null;
+    @property(AudioClip)
+    collideAudio: AudioClip = null;
 
     private _isControlEnabled: boolean = true; // 控制小鸟是否可以被控制
 
@@ -59,6 +64,9 @@ export class BirdController extends Component {
         // 点击给小鸟Y轴一个向上的速度
         this.Red2D.linearVelocity = new Vec2(0, 10);
         this.node.angle = 30; // 点击时小鸟向上倾斜30度
+
+        // 每次点击触发音效
+        AudioMgr.inst.playOneShot(this.clickAudio);
     }
 
     public enableControl() {
@@ -85,6 +93,8 @@ export class BirdController extends Component {
             console.log("游戏结束");
             // 在这里可以添加游戏结束的逻辑，比如停止游戏、显示游戏结束界面等
             GameManager.instance().transitionToGameOverState();
+            // 落地音效
+            AudioMgr.inst.playOneShot(this.collideAudio)
         }
     }
     onEndContact(selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {

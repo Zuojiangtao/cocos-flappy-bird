@@ -1,4 +1,5 @@
-import { _decorator, Component, director, Label, math, Node } from 'cc';
+import { _decorator, AudioClip, Component, director, Label, math, Node } from 'cc';
+import { AudioMgr } from '../AudioMgr';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameOverUI')
@@ -9,6 +10,8 @@ export class GameOverUI extends Component {
     bestScoreLabel: Label = null;
     @property([Node])
     medalArray: Node[] = [];
+    @property(AudioClip)
+    restartAudio: AudioClip = null;
 
     public show(currentScore: number, bestScore: number) {
         this.node.active = true;
@@ -29,6 +32,7 @@ export class GameOverUI extends Component {
 
     onReplay() {
         director.loadScene(director.getScene().name);
+        AudioMgr.inst.playOneShot(this.restartAudio); // 重新开始音效
     }
 }
 

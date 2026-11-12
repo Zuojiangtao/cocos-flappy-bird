@@ -1,10 +1,11 @@
-import { _decorator, Component, Label, Node } from 'cc';
+import { _decorator, AudioClip, Component, Label, Node } from 'cc';
 import { BacgroundController } from './BacgroundController';
 import { BirdController } from './BirdController';
 import { PipeSpawn } from './PipeSpawn';
 import { GameReadyUI } from './UI/GameReadyUI';
 import { GameData } from './GameData';
 import { GameOverUI } from './UI/GameOverUI';
+import { AudioMgr } from './AudioMgr';
 const { ccclass, property } = _decorator;
 
 enum GameState {
@@ -38,6 +39,12 @@ export class GameManager extends Component {
     gamingScore: Label = null;
     @property(GameOverUI)
     gameOverUI: GameOverUI = null;
+    @property(AudioClip)
+    bgAudio: AudioClip = null;
+    @property(AudioClip)
+    gameOverAudio: AudioClip = null;
+    @property(AudioClip)
+    scoreAudio: AudioClip = null; 
 
     currentState: GameState = GameState.Ready;
 
@@ -56,6 +63,7 @@ export class GameManager extends Component {
         }
 
         this.transitionToReadyState();
+        AudioMgr.inst.play(this.bgAudio);
     }
 
     update(deltaTime: number) {
@@ -102,11 +110,16 @@ export class GameManager extends Component {
         this.gamingUI.active = false; // 隐藏游戏进行界面
         this.gameOverUI?.show(GameData.getScore(), GameData.getBestScore()); // 显示游戏结束界面
 
+        // 结算分数
         GameData.setScore();
+        // over 音效
+        AudioMgr.inst.stop();
+        AudioMgr.inst.playOneShot(this.gameOverAudio);
     }
 
     addScore(count: number = 1) {
         GameData.addScore(count);
         this.gamingScore.string = GameData.getScore().toString();
+        AudioMgr.inst.playOneShot(this.scoreAudio); // 得分音效
     }
 }
