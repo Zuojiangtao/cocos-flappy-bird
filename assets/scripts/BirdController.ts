@@ -1,7 +1,7 @@
 import { _decorator, Collider2D, Component, Contact2DType, input, Input, IPhysics2DContact, RigidBody2D, Vec2, Animation, AudioClip } from 'cc';
-import { GameManager } from './GameManager';
 import { Tags } from './Tags';
 import { AudioMgr } from './AudioMgr';
+import { GameEvent, gameEvents } from './GameEvents';
 const { ccclass, property } = _decorator;
 
 @ccclass('BirdController')
@@ -98,8 +98,8 @@ export class BirdController extends Component {
         // 碰撞检测逻辑
         if (otherCollider.tag === Tags.FLOOR || otherCollider.tag === Tags.PIPE) {
             console.log("游戏结束");
-            // 在这里可以添加游戏结束的逻辑，比如停止游戏、显示游戏结束界面等
-            GameManager.instance().transitionToGameOverState();
+            // 交给 GameManager 处理状态切换，Bird 不再反向 import GameManager
+            gameEvents.emit(GameEvent.HIT);
             // 落地音效
             AudioMgr.inst.playOneShot(this.collideAudio)
         }
@@ -108,8 +108,8 @@ export class BirdController extends Component {
         console.log("碰撞结束::");
         if (otherCollider.tag === Tags.SCORE) {
             console.log("通过管道，得分");
-            // 在这里可以添加得分的逻辑，比如增加分数、更新UI等
-            GameManager.instance().addScore();
+            // 由 GameManager 统一判断当前状态并加分
+            gameEvents.emit(GameEvent.SCORE);
         }
     }
 }

@@ -1,4 +1,4 @@
-import { _decorator, Component, instantiate, log, math, Prefab } from 'cc';
+import { _decorator, Component, instantiate, math, Prefab } from 'cc';
 import { PipeController as Pipe } from './PipeController';
 const { ccclass, property } = _decorator;
 
@@ -26,6 +26,12 @@ export class PipeSpawn extends Component {
 
     private timer: number = 0;
     private _isSpawning: boolean = false;
+    private _pipeSpeed: number = 100;
+
+    /** 由 GameManager 注入，生成管道时再传给 PipeController */
+    public setSpeed(speed: number) {
+        this._pipeSpeed = speed;
+    }
 
     start() {
         // 开局立刻生成一根管道，避免玩家一开始就看到空荡荡的屏幕
@@ -53,6 +59,11 @@ export class PipeSpawn extends Component {
 
     private spawnPipe() {
         const pipeNode = instantiate(this.pipePrefab);
+        // 先注入速度，再挂到场景树，保证 PipeController 的第一次 update 用的就是正确速度
+        const pipe = pipeNode.getComponent(Pipe);
+        if (pipe) {
+            pipe.setSpeed(this._pipeSpeed);
+        }
         this.node.addChild(pipeNode); // 加到生成器节点下，位置以生成器为原点
         // 生成器节点就是出生点：x 固定为 0（跟随生成器），y 做随机上下偏移
         pipeNode.setPosition(0, math.randomRangeInt(-100, 200), 0);

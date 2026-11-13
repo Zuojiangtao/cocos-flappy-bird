@@ -1,4 +1,4 @@
-import { _decorator, AudioClip, Component, Label, Node } from 'cc';
+import { _decorator, AudioClip, Component, director, Label, Node } from 'cc';
 import { BacgroundController } from './BacgroundController';
 import { BirdController } from './BirdController';
 import { PipeSpawn } from './PipeSpawn';
@@ -7,6 +7,7 @@ import { GameData } from './GameData';
 import { GameOverUI } from './UI/GameOverUI';
 import { AudioMgr } from './AudioMgr';
 import { ScreenAdapter } from './ScreenAdapter';
+import { GameEvent, gameEvents } from './GameEvents';
 const { ccclass, property } = _decorator;
 
 enum GameState {
@@ -48,16 +49,34 @@ export class GameManager extends Component {
     scoreAudio: AudioClip = null; 
 
     currentState: GameState = GameState.Ready;
+    private _isReplaying: boolean = false;
 
     onLoad() {
         GameManager._instance = this;
+
+        // Bird / UI 通过事件通知 GameManager，避免它们反向 import 造成循环依赖
+        gameEvents.on(GameEvent.START, this.handleStart, this);
+        gameEvents.on(GameEvent.HIT, this.handleHit, this);
+        gameEvents.on(GameEvent.SCORE, this.handleScore, this);
+        gameEvents.on(GameEvent.REPLAY, this.handleReplay, this);
+    }
+
+    onDestroy() {
+        gameEvents.off(GameEvent.START, this.handleStart, this);
+        gameEvents.off(GameEvent.HIT, this.handleHit, this);
+        gameEvents.off(GameEvent.SCORE, this.handleScore, this);
+        gameEvents.off(GameEvent.REPLAY, this.handleReplay, this);
+
+        if (GameManager._instance === this) {
+            GameManager._instance = null;
+        }
     }
 
     start() {
         // 长屏适配：背景铺满上下、地面贴底，去掉模拟器/手机上下的黑边
         ScreenAdapter.fit(this.node.parent);
 
-        // 统一把速度下发给背景/地面：
+        // 统一把速度下发给背景/地面/管道：
         // 它们不再反向 import GameManager，这样两边就不会形成循环依赖
         if (this.backgroundMoving) {
             this.backgroundMoving.setSpeed(this.moveSpeed);
@@ -65,9 +84,36 @@ export class GameManager extends Component {
         if (this.floorMoving) {
             this.floorMoving.setSpeed(this.moveSpeed);
         }
+        if (this.pipeSpawn) {
+            this.pipeSpawn.setSpeed(this.moveSpeed);
+        }
 
         this.transitionToReadyState();
         AudioMgr.inst.play(this.bgAudio);
+    }
+
+    private handleStart() {
+        // 只允许从准备状态进入游戏，避免重复点击重复开局
+        if (this.currentState !== GameState.Ready) return;
+        this.transitionToPlayingState();
+    }
+
+    private handleHit() {
+        this.transitionToGameOverState();
+    }
+
+    private handleScore() {
+        this.addScore();
+    }
+
+    private handleReplay() {
+        if (this._isReplaying) return;
+        this._isReplaying = true;
+
+        const scene = director.getScene();
+        if (scene) {
+            director.loadScene(scene.name);
+        }
     }
 
     update(deltaTime: number) {

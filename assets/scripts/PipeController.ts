@@ -1,5 +1,4 @@
 import { _decorator, Component } from 'cc';
-import { GameManager } from './GameManager';
 const { ccclass, property } = _decorator;
 
 @ccclass('PipeController')
@@ -9,11 +8,9 @@ export class PipeController extends Component {
 
     private pipeSpeed: number = 100;
 
-    start() {
-        const manager = GameManager.instance();
-        if (manager) {
-            this.pipeSpeed = manager.moveSpeed;
-        }
+    /** 由 PipeSpawn 在生成时注入速度，避免 PipeController 反向 import GameManager */
+    public setSpeed(speed: number) {
+        this.pipeSpeed = speed;
     }
 
     update(deltaTime: number) {

@@ -1,5 +1,5 @@
 import { _decorator, Component, input, Input } from 'cc';
-import { GameManager } from '../GameManager';
+import { GameEvent, gameEvents } from '../GameEvents';
 const { ccclass, property } = _decorator;
 
 @ccclass('GameReadyUI')
@@ -18,8 +18,8 @@ export class GameReadyUI extends Component {
         if (!this.node.active) {
             return;
         }
-        // 触摸屏幕时，切换到游戏进行状态
-        GameManager.instance().transitionToPlayingState();
+        // 触摸屏幕时，通知 GameManager 切换到游戏进行状态
+        gameEvents.emit(GameEvent.START);
     }
 
     public show() {
