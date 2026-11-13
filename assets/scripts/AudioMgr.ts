@@ -1,11 +1,13 @@
 //AudioMgr.ts
 import { Node, AudioSource, AudioClip, resources, director } from 'cc';
+
 /**
- * @en
- * this is a sington class for audio play, can be easily called from anywhere in you project.
- * @zh
- * 这是一个用于播放音频的单件类，可以很方便地在项目的任何地方调用。
- */ 
+ * 音频管理单例。
+ *
+ * BGM 和音效使用两个独立的 AudioSource：
+ * - BGM 的 stop()/play() 不会打断正在播放的点击、得分、结算音效；
+ * - 重开时先播放的 restart 音效不会被新场景的 BGM 截断。
+ */
 export class AudioMgr {
     private static _inst: AudioMgr;
     public static get inst(): AudioMgr {
@@ -15,41 +17,48 @@ export class AudioMgr {
         return this._inst;
     }
 
-    private _audioSource: AudioSource;
+    private _bgmSource: AudioSource;
+    private _sfxSource: AudioSource;
+
     constructor() {
-        //@en create a node as audioMgr
-        //@zh 创建一个节点作为 audioMgr
+        // 常驻节点，场景切换时不会被销毁
         let audioMgr = new Node();
         audioMgr.name = '__audioMgr__';
-
-        //@en add to the scene.
-        //@zh 添加节点到场景
         director.getScene().addChild(audioMgr);
-
-        //@en make it as a persistent node, so it won't be destroied when scene change.
-        //@zh 标记为常驻节点，这样场景切换的时候就不会被销毁了
         director.addPersistRootNode(audioMgr);
 
-        //@en add AudioSource componrnt to play audios.
-        //@zh 添加 AudioSource 组件，用于播放音频。
-        this._audioSource = audioMgr.addComponent(AudioSource);
+        // BGM
+        const bgmNode = new Node('bgm');
+        audioMgr.addChild(bgmNode);
+        this._bgmSource = bgmNode.addComponent(AudioSource);
+
+        // 音效
+        const sfxNode = new Node('sfx');
+        audioMgr.addChild(sfxNode);
+        this._sfxSource = sfxNode.addComponent(AudioSource);
     }
 
     public get audioSource() {
-        return this._audioSource;
+        return this._bgmSource;
+    }
+
+    public get bgmSource() {
+        return this._bgmSource;
+    }
+
+    public get sfxSource() {
+        return this._sfxSource;
     }
 
     /**
-     * @en
-     * play short audio, such as strikes,explosions
-     * @zh
-     * 播放短音频,比如 打击音效，爆炸音效等
+     * @en play short audio, such as strikes, explosions
+     * @zh 播放短音频，比如打击音效、爆炸音效等
      * @param sound clip or url for the audio
-     * @param volume 
+     * @param volume
      */
     playOneShot(sound: AudioClip | string, volume: number = 1.0) {
         if (sound instanceof AudioClip) {
-            this._audioSource.playOneShot(sound, volume);
+            this._sfxSource.playOneShot(sound, volume);
         }
         else {
             resources.load(sound, (err, clip: AudioClip) => {
@@ -57,29 +66,27 @@ export class AudioMgr {
                     console.log(err);
                 }
                 else {
-                    this._audioSource.playOneShot(clip, volume);
+                    this._sfxSource.playOneShot(clip, volume);
                 }
             });
         }
     }
 
     /**
-     * @en
-     * play long audio, such as the bg music
-     * @zh
-     * 播放长音频，比如 背景音乐
+     * @en play long audio, such as the bg music
+     * @zh 播放长音频，比如背景音乐
      * @param sound clip or url for the sound
      * @param volume
      * @param loop 是否循环播放，背景音乐默认循环
      */
     play(sound: AudioClip | string, volume: number = 1.0, loop: boolean = true) {
         if (sound instanceof AudioClip) {
-            this._audioSource.stop();
-            this._audioSource.clip = sound;
+            this._bgmSource.stop();
+            this._bgmSource.clip = sound;
             // AudioSource.play() 默认只播一遍，背景音乐必须显式打开 loop
-            this._audioSource.loop = loop;
-            this._audioSource.volume = volume;
-            this._audioSource.play();
+            this._bgmSource.loop = loop;
+            this._bgmSource.volume = volume;
+            this._bgmSource.play();
         }
         else {
             resources.load(sound, (err, clip: AudioClip) => {
@@ -87,35 +94,34 @@ export class AudioMgr {
                     console.log(err);
                 }
                 else {
-                    this._audioSource.stop();
-                    this._audioSource.clip = clip;
-                    this._audioSource.loop = loop;
-                    this._audioSource.volume = volume;
-                    this._audioSource.play();
+                    this._bgmSource.stop();
+                    this._bgmSource.clip = clip;
+                    this._bgmSource.loop = loop;
+                    this._bgmSource.volume = volume;
+                    this._bgmSource.play();
                 }
             });
         }
     }
 
     /**
-     * stop the audio play
+     * 停止 BGM（不影响正在播放的音效）
      */
     stop() {
-        this._audioSource.stop();
+        this._bgmSource.stop();
     }
 
     /**
-     * pause the audio play
+     * 暂停 BGM
      */
     pause() {
-        this._audioSource.pause();
+        this._bgmSource.pause();
     }
 
     /**
-     * resume the audio play
+     * 恢复 BGM
      */
-    resume(){
-        this._audioSource.play();
+    resume() {
+        this._bgmSource.play();
     }
 }
-
