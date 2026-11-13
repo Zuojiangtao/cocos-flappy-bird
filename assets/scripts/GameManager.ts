@@ -1,4 +1,4 @@
-import { _decorator, AudioClip, Component, director, Label, Node } from 'cc';
+import { _decorator, AudioClip, Color, Component, director, Game, game, Graphics, Label, Node, tween, UIOpacity, UITransform, view } from 'cc';
 import { BackgroundController } from './BackgroundController';
 import { BirdController } from './BirdController';
 import { PipeSpawn } from './PipeSpawn';
@@ -45,6 +45,9 @@ export class GameManager extends Component {
 
     currentState: GameState = GameState.Ready;
     private _isReplaying: boolean = false;
+    private _pausedByHide: boolean = false;
+    private _bgmPlaying: boolean = false;
+    private _replayFade: Node = null;
 
     onLoad() {
         // Bird / UI 通过事件通知 GameManager，避免它们反向 import 造成循环依赖
@@ -52,6 +55,10 @@ export class GameManager extends Component {
         gameEvents.on(GameEvent.HIT, this.handleHit, this);
         gameEvents.on(GameEvent.SCORE, this.handleScore, this);
         gameEvents.on(GameEvent.REPLAY, this.handleReplay, this);
+
+        // 切后台时暂停游戏循环和 BGM，回到前台再恢复
+        game.on(Game.EVENT_HIDE, this.handleAppHide, this);
+        game.on(Game.EVENT_SHOW, this.handleAppShow, this);
     }
 
     onDestroy() {
@@ -59,6 +66,9 @@ export class GameManager extends Component {
         gameEvents.off(GameEvent.HIT, this.handleHit, this);
         gameEvents.off(GameEvent.SCORE, this.handleScore, this);
         gameEvents.off(GameEvent.REPLAY, this.handleReplay, this);
+
+        game.off(Game.EVENT_HIDE, this.handleAppHide, this);
+        game.off(Game.EVENT_SHOW, this.handleAppShow, this);
     }
 
     start() {
@@ -79,6 +89,7 @@ export class GameManager extends Component {
 
         this.transitionToReadyState();
         AudioMgr.inst.play(this.bgAudio);
+        this._bgmPlaying = true;
     }
 
     private handleStart() {
@@ -100,9 +111,69 @@ export class GameManager extends Component {
         this._isReplaying = true;
 
         const scene = director.getScene();
-        if (scene) {
+        if (!scene) return;
+
+        const fade = this.getReplayFade();
+        const opacity = fade?.getComponent(UIOpacity);
+        if (!opacity) {
             director.loadScene(scene.name);
+            return;
         }
+
+        // 先淡出到黑，再加载场景，避免直接 loadScene 的一帧黑屏
+        tween(opacity)
+            .to(0.2, { opacity: 255 })
+            .call(() => director.loadScene(scene.name))
+            .start();
+    }
+
+    private handleAppHide() {
+        this._pausedByHide = this.currentState === GameState.Playing;
+        if (this._pausedByHide) {
+            director.pause();
+        }
+        if (this._bgmPlaying) {
+            AudioMgr.inst.pause();
+        }
+    }
+
+    private handleAppShow() {
+        if (this._pausedByHide) {
+            this._pausedByHide = false;
+            director.resume();
+        }
+        if (this._bgmPlaying) {
+            AudioMgr.inst.resume();
+        }
+    }
+
+    private getReplayFade(): Node | null {
+        if (this._replayFade && this._replayFade.isValid) {
+            return this._replayFade;
+        }
+
+        const parent = this.node.parent;
+        if (!parent) return null;
+
+        const visibleSize = view.getVisibleSize();
+        const fade = new Node('__replayFade__');
+        fade.layer = this.node.layer; // 和 Canvas 子节点同一渲染层，UI 相机才可见
+        parent.addChild(fade);
+        fade.setSiblingIndex(parent.children.length - 1);
+
+        const transform = fade.addComponent(UITransform);
+        transform.setContentSize(visibleSize.width, visibleSize.height);
+
+        const graphics = fade.addComponent(Graphics);
+        graphics.fillColor = new Color(0, 0, 0, 255);
+        graphics.rect(-visibleSize.width / 2, -visibleSize.height / 2, visibleSize.width, visibleSize.height);
+        graphics.fill();
+
+        const opacity = fade.addComponent(UIOpacity);
+        opacity.opacity = 0;
+
+        this._replayFade = fade;
+        return fade;
     }
 
     transitionToReadyState() {
@@ -155,6 +226,7 @@ export class GameManager extends Component {
 
         // game over：先停 BGM；碰撞音效和结算音效错开，避免两个声音同时砸在一起
         AudioMgr.inst.stop();
+        this._bgmPlaying = false;
         this.scheduleOnce(() => {
             AudioMgr.inst.playOneShot(this.gameOverAudio);
         }, 0.15);

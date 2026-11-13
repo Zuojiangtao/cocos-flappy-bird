@@ -107,7 +107,8 @@ BirdController ├─ gameEvents ─→ GameManager ─→ UI / Audio / PipeSpaw
 GameOverUI ──┘
 ```
 
-- `GameManager` 维护 `Ready → Playing → GameOver` 三态；重开时重新加载场景。
+- `GameManager` 维护 `Ready → Playing → GameOver` 三态；重开时先 0.2s 淡出到黑，再重新加载场景。
+- 切后台会暂停 BGM；Playing 状态下也会暂停游戏循环，回到前台自动恢复。
 - Bird / UI 不反向依赖 `GameManager`，只发 `START / HIT / SCORE / REPLAY` 事件，避免循环依赖。
 - 设计分辨率 `720 × 1280`，宽度固定（fitWidth）；`ScreenAdapter` 负责长屏下背景、地面和遮罩铺满。
 - 管道由 `PipeSpawn` 预生成第一根，`GameManager` 进入 Playing 时统一启用并开始计时；GameOver 时统一暂停。
@@ -119,7 +120,7 @@ GameOverUI ──┘
 
 - 目前主要针对竖屏手机调过；4:3 平板 / 折叠屏上顶部 UI 可能被裁切，需要 Widget、SafeArea 或 UI 层缩放。
 - 管道未使用对象池；低端机可加 `NodePool`。
-- 切后台没有暂停 / 恢复；重开使用 `loadScene`，会有短暂黑帧。
+- Android 返回键仍直接退出；未做暂停菜单。
 - 当前为演示包：debug 签名、Cocos 默认启动画面；正式发布需替换 keystore、图标和启动图。
 
 ## 国内网络构建（可选）
