@@ -17,6 +17,7 @@ export class BirdController extends Component {
     collideAudio: AudioClip = null;
 
     private _isControlEnabled: boolean = true; // 控制小鸟是否可以被控制
+    private _hasHit: boolean = false; // 本局是否已经撞过，避免重复播碰撞音效
 
     onLoad() {
         input.on(Input.EventType.TOUCH_START, this.onTouchStart, this);
@@ -78,6 +79,7 @@ export class BirdController extends Component {
 
     public enableControl() {
         this._isControlEnabled = true;
+        this._hasHit = false; // 新一局开始，重置撞击标记
         this.Red2D.enabled = true; // 启用刚体
         this._Animation.enabled = true; // 播放动画
     }
@@ -93,24 +95,21 @@ export class BirdController extends Component {
     }
 
     onBeginContact(selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {
-        console.log("碰撞开始::==================");
-        console.log("碰撞的对象是: " + otherCollider.node.name, "碰撞的对象的tag是: " + otherCollider.tag);
-        // 碰撞检测逻辑
-        if (otherCollider.tag === Tags.FLOOR || otherCollider.tag === Tags.PIPE) {
-            console.log("游戏结束");
-            // 交给 GameManager 处理状态切换，Bird 不再反向 import GameManager
-            gameEvents.emit(GameEvent.HIT);
-            // 落地音效
-            AudioMgr.inst.playOneShot(this.collideAudio)
-        }
+        if (otherCollider.tag !== Tags.FLOOR && otherCollider.tag !== Tags.PIPE) return;
+        if (this._hasHit) return;
+
+        this._hasHit = true;
+        // 落地音效只播一次；鸟死后继续下落碰到地面时不再重复
+        AudioMgr.inst.playOneShot(this.collideAudio);
+        // 交给 GameManager 处理状态切换，Bird 不再反向 import GameManager
+        gameEvents.emit(GameEvent.HIT);
     }
+
     onEndContact(selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {
-        console.log("碰撞结束::");
-        if (otherCollider.tag === Tags.SCORE) {
-            console.log("通过管道，得分");
-            // 由 GameManager 统一判断当前状态并加分
-            gameEvents.emit(GameEvent.SCORE);
-        }
+        if (otherCollider.tag !== Tags.SCORE) return;
+
+        // 由 GameManager 统一判断当前状态并加分
+        gameEvents.emit(GameEvent.SCORE);
     }
 }
 

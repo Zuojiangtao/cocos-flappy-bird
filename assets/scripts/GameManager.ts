@@ -168,9 +168,11 @@ export class GameManager extends Component {
         const bestScore = GameData.setScore();
         this.gameOverUI?.show(currentScore, bestScore); // 显示游戏结束界面
 
-        // game over：先停 BGM，再播结算音效
+        // game over：先停 BGM；碰撞音效和结算音效错开，避免两个声音同时砸在一起
         AudioMgr.inst.stop();
-        AudioMgr.inst.playOneShot(this.gameOverAudio);
+        this.scheduleOnce(() => {
+            AudioMgr.inst.playOneShot(this.gameOverAudio);
+        }, 0.15);
     }
 
     addScore(count: number = 1) {
