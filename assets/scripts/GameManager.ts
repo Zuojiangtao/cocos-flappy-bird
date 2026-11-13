@@ -128,7 +128,7 @@ export class GameManager extends Component {
         this.bird.disableControl(); // 禁用小鸟的控制
         this.backgroundMoving.disableMovement(); // 禁用背景的移动
         this.floorMoving.disableMovement(); // 禁用地面的移动
-        this.pipeSpawn.pauseSpawning(); // 暂停管道生成
+        this.pipeSpawn.enterReadyState(); // 预生成第一根管道并暂停
 
         this.gameReadyUI?.show(); // 显示游戏准备界面
         this.gamingUI.active = false; // 隐藏游戏进行界面
@@ -141,7 +141,7 @@ export class GameManager extends Component {
         this.bird.flap(); // 触发游戏的第一下点击也要扇翅膀，否则开局会直接往下掉
         this.backgroundMoving.enableMovement(); // 启用背景的移动
         this.floorMoving.enableMovement(); // 启用地面的移动
-        this.pipeSpawn.resumeSpawning(); // 恢复管道生成
+        this.pipeSpawn.startPlaying(); // 恢复管道生成并启用预生成的管道
 
         this.gameReadyUI?.hide(); // 隐藏游戏准备界面
         this.gamingUI.active = true; // 显示游戏进行界面

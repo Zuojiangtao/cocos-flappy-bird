@@ -33,12 +33,28 @@ export class PipeSpawn extends Component {
         this._pipeSpeed = speed;
     }
 
-    start() {
-        // 开局立刻生成一根管道，避免玩家一开始就看到空荡荡的屏幕
-        if (this.spawnOnStart && this._isSpawning) {
+    /**
+     * 进入准备状态：暂停生成，按 spawnOnStart 预生成第一根并冻住。
+     * 由 GameManager 在 Ready 状态调用；第一根不再依赖组件 start() 的执行顺序。
+     */
+    public enterReadyState() {
+        this._isSpawning = false;
+        this.timer = 0;
+
+        if (this.spawnOnStart) {
             this.spawnPipe();
-            this.timer = 0;
         }
+
+        this.setPipesEnabled(false);
+    }
+
+    /**
+     * 进入游戏状态：恢复生成，并把 Ready 时预生成的管道重新启用。
+     */
+    public startPlaying() {
+        this._isSpawning = true;
+        this.timer = 0;
+        this.setPipesEnabled(true);
     }
 
     update(deltaTime: number) {
@@ -58,6 +74,8 @@ export class PipeSpawn extends Component {
     }
 
     private spawnPipe() {
+        if (!this.pipePrefab) return;
+
         const pipeNode = instantiate(this.pipePrefab);
         // 先注入速度，再挂到场景树，保证 PipeController 的第一次 update 用的就是正确速度
         const pipe = pipeNode.getComponent(Pipe);
@@ -71,15 +89,13 @@ export class PipeSpawn extends Component {
 
     public pauseSpawning() {
         this._isSpawning = false;
-
-        // 暂停生成时，已生成的管道也要停止移动
-        this.node.children.forEach(item => {
-            const pipeNode = item.getComponent(Pipe);
-            if(pipeNode) pipeNode.enabled = false;
-        });
+        this.setPipesEnabled(false);
     }
 
-    public resumeSpawning() {
-        this._isSpawning = true;
+    private setPipesEnabled(enabled: boolean) {
+        this.node.children.forEach(item => {
+            const pipe = item.getComponent(Pipe);
+            if (pipe) pipe.enabled = enabled;
+        });
     }
 }
