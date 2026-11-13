@@ -67,11 +67,11 @@ adb install -r $apk.FullName
 tar -tf $apk.FullName | Select-String 'lib/arm64-v8a/libcocos.so'
 ```
 
-> 当前构建配置是 `arm64-v8a`。如果要跑 x86_64 模拟器，请临时在 Build 面板勾选 x86_64，不要把它作为手机交付包。
+> 手机交付包使用 `arm64-v8a`。如果要跑 x86_64 模拟器，请临时在 Build 面板勾选 x86_64，不要把它作为手机交付包。
 >
 > `useDebugKeystore` 只用于演示；正式发布请换成自己的 keystore，并避免把密码提交到仓库。
 >
-> 构建参数已提交在 `profiles/v2/packages/android.json`；`native/` 大部分由 Cocos 生成、未纳入 Git，但 `AppActivity.java` 的 Android 生命周期补丁已单独 force-add，构建时会带上。
+> 构建参数见上表；`profiles/android.json` 是 Cocos Build 面板的本机状态，不纳入 Git。`native/` 大部分由 Cocos 生成、未纳入 Git，但 `AppActivity.java` 的 Android 生命周期补丁已单独 force-add，构建时会带上。
 
 ## 项目结构
 
@@ -95,7 +95,7 @@ assets/
     Tags.ts                  碰撞 tag 常量
     UI/GameReadyUI.ts        准备界面
     UI/GameOverUI.ts         结算界面
-profiles/v2/packages/android.json  Android 构建参数
+profiles/v2/packages/android.json  本机 Build 面板状态（不纳入 Git）
 settings/v2/packages/              引擎模块、设计分辨率等
 ```
 
