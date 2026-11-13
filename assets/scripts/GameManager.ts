@@ -174,6 +174,9 @@ export class GameManager extends Component {
     }
 
     addScore(count: number = 1) {
+        // 游戏结束后，小鸟掉出得分传感器仍会触发 END_CONTACT，这里兜底
+        if (this.currentState !== GameState.Playing) return;
+
         GameData.addScore(count);
         this.gamingScore.string = GameData.getScore().toString();
         AudioMgr.inst.playOneShot(this.scoreAudio); // 得分音效
