@@ -48,6 +48,8 @@ export class GameManager extends Component {
     private _pausedByHide: boolean = false;
     private _bgmPlaying: boolean = false;
     private _replayFade: Node = null;
+    private _pauseHandler: (() => void) | null = null;
+    private _resumeHandler: (() => void) | null = null;
 
     onLoad() {
         // Bird / UI 通过事件通知 GameManager，避免它们反向 import 造成循环依赖
@@ -56,9 +58,16 @@ export class GameManager extends Component {
         gameEvents.on(GameEvent.SCORE, this.handleScore, this);
         gameEvents.on(GameEvent.REPLAY, this.handleReplay, this);
 
-        // 切后台时暂停游戏循环和 BGM，回到前台再恢复
+        // Web / 编辑器预览：页面可见性事件
         game.on(Game.EVENT_HIDE, this.handleAppHide, this);
         game.on(Game.EVENT_SHOW, this.handleAppShow, this);
+
+        // Android 原生：Cocos 3.8.8 的 CocosApplication::onPause 是空实现，
+        // Game.EVENT_HIDE 不会触发，因此由 AppActivity 通过 JSB 调这两个全局函数。
+        this._pauseHandler = () => this.handleAppHide();
+        this._resumeHandler = () => this.handleAppShow();
+        (globalThis as any).__flappyPause = this._pauseHandler;
+        (globalThis as any).__flappyResume = this._resumeHandler;
     }
 
     onDestroy() {
@@ -69,6 +78,16 @@ export class GameManager extends Component {
 
         game.off(Game.EVENT_HIDE, this.handleAppHide, this);
         game.off(Game.EVENT_SHOW, this.handleAppShow, this);
+
+        // 只清理自己挂上去的函数，避免场景重载时误删新 GameManager 的监听
+        if ((globalThis as any).__flappyPause === this._pauseHandler) {
+            delete (globalThis as any).__flappyPause;
+        }
+        if ((globalThis as any).__flappyResume === this._resumeHandler) {
+            delete (globalThis as any).__flappyResume;
+        }
+        this._pauseHandler = null;
+        this._resumeHandler = null;
     }
 
     start() {

@@ -71,7 +71,7 @@ tar -tf $apk.FullName | Select-String 'lib/arm64-v8a/libcocos.so'
 >
 > `useDebugKeystore` 只用于演示；正式发布请换成自己的 keystore，并避免把密码提交到仓库。
 >
-> 构建参数已提交在 `profiles/v2/packages/android.json`；`native/` 由 Cocos 构建时生成，未纳入 Git。
+> 构建参数已提交在 `profiles/v2/packages/android.json`；`native/` 大部分由 Cocos 生成、未纳入 Git，但 `AppActivity.java` 的 Android 生命周期补丁已单独 force-add，构建时会带上。
 
 ## 项目结构
 
@@ -108,7 +108,7 @@ GameOverUI ──┘
 ```
 
 - `GameManager` 维护 `Ready → Playing → GameOver` 三态；重开时先 0.2s 淡出到黑，再重新加载场景。
-- 切后台会暂停 BGM；Playing 状态下也会暂停游戏循环，回到前台自动恢复。
+- 切后台：Android 由 `AppActivity` 通过 JSB 调用 `__flappyPause` / `__flappyResume`（Cocos 3.8.8 原生不会触发 `Game.EVENT_HIDE`）；Web / 编辑器仍走 `Game.EVENT_HIDE`。Playing 时暂停游戏循环，BGM 暂停 / 恢复。
 - Bird / UI 不反向依赖 `GameManager`，只发 `START / HIT / SCORE / REPLAY` 事件，避免循环依赖。
 - 设计分辨率 `720 × 1280`，宽度固定（fitWidth）；`ScreenAdapter` 负责长屏下背景、地面和遮罩铺满。
 - 管道由 `PipeSpawn` 预生成第一根，`GameManager` 进入 Playing 时统一启用并开始计时；GameOver 时统一暂停。
