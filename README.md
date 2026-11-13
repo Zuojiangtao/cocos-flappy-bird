@@ -113,11 +113,11 @@ GameOverUI ──┘
 - 管道由 `PipeSpawn` 预生成第一根，`GameManager` 进入 Playing 时统一启用并开始计时；GameOver 时统一暂停。
 - 最高分通过 `sys.localStorage` 保存，Web 与原生通用；key 沿用旧版本的 `BsetScore`，避免已有存档丢失。
 - `GameManager.addScore()` 按 `Playing` 状态兜底，鸟死后掉出得分传感器不会再加分。
+- BGM 使用 OGG（约 0.47 MB），比原始 WAV 小约 91%。
 
 ## 已知限制 / 后续
 
 - 目前主要针对竖屏手机调过；4:3 平板 / 折叠屏上顶部 UI 可能被裁切，需要 Widget、SafeArea 或 UI 层缩放。
-- BGM 是 WAV（约 5.2 MB），转 OGG 可明显减小包体。
 - 管道未使用对象池；低端机可加 `NodePool`。
 - 切后台没有暂停 / 恢复；重开使用 `loadScene`，会有短暂黑帧。
 - 当前为演示包：debug 签名、Cocos 默认启动画面；正式发布需替换 keystore、图标和启动图。

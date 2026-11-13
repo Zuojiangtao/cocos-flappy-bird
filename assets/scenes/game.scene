@@ -1250,7 +1250,7 @@
       "__id__": 66
     },
     "bgAudio": {
-      "__uuid__": "678a6545-9c36-4972-a525-099708eacfda",
+      "__uuid__": "29efb462-4067-4793-80dd-3d37cc287f3e",
       "__expectedType__": "cc.AudioClip"
     },
     "gameOverAudio": {
