@@ -10,8 +10,9 @@ import { sys } from 'cc';
 export class GameData {
     private static _score: number = 0;
 
-    /** 沿用旧 key，避免已经存过的最高分丢失 */
-    private static readonly BEST_SCORE: string = 'BsetScore';
+    private static readonly BEST_SCORE: string = 'BestScore';
+    /** 旧版本 key，读取时自动迁移，避免已有最高分丢失 */
+    private static readonly LEGACY_BEST_SCORE: string = 'BsetScore';
 
     public static getScore(): number {
         return this._score;
@@ -36,13 +37,14 @@ export class GameData {
 
         if (curScore > bestScore) {
             this.write(this.BEST_SCORE, curScore.toString());
+            this.remove(this.LEGACY_BEST_SCORE);
             return curScore;
         }
         return bestScore;
     }
 
     public static getBestScore(): number {
-        const value = this.read(this.BEST_SCORE);
+        const value = this.read(this.BEST_SCORE) ?? this.read(this.LEGACY_BEST_SCORE);
         if (!value) {
             return 0;
         }
@@ -65,6 +67,14 @@ export class GameData {
             sys.localStorage.setItem(key, value);
         } catch (e) {
             console.warn('[GameData] 写入本地存档失败', e);
+        }
+    }
+
+    private static remove(key: string): void {
+        try {
+            sys.localStorage.removeItem(key);
+        } catch (e) {
+            console.warn('[GameData] 清理旧存档失败', e);
         }
     }
 }

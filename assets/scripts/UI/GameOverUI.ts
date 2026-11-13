@@ -21,12 +21,19 @@ export class GameOverUI extends Component {
         this.curScoreLabel.string = currentScore.toString();
         this.bestScoreLabel.string = bestScore.toString();
 
+        // 结算界面可能被重复 show，先隐藏所有奖牌，避免多块奖牌同时亮起
+        this.medalArray.forEach((medal) => {
+            if (medal) medal.active = false;
+        });
+
         //根据对应分数范围显示对应奖牌
         let count: number = Math.floor(currentScore / 10);
         if (count > 3) {
             count = 3;
         }
-        this.medalArray[count].active = true;
+        if (this.medalArray[count]) {
+            this.medalArray[count].active = true;
+        }
     }
 
     public hide() {

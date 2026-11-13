@@ -1,5 +1,5 @@
 import { _decorator, AudioClip, Component, director, Label, Node } from 'cc';
-import { BacgroundController } from './BacgroundController';
+import { BackgroundController } from './BackgroundController';
 import { BirdController } from './BirdController';
 import { PipeSpawn } from './PipeSpawn';
 import { GameReadyUI } from './UI/GameReadyUI';
@@ -18,19 +18,14 @@ enum GameState {
 
 @ccclass('GameManager')
 export class GameManager extends Component {
-    private static _instance: GameManager = null;
-    public static instance() {
-        return GameManager._instance;
-    }
-
     @property
     moveSpeed: number = 100;
     @property(BirdController)
     bird: BirdController = null;
-    @property(BacgroundController)
-    backgroundMoving: BacgroundController = null;
-    @property(BacgroundController)
-    floorMoving: BacgroundController = null;
+    @property(BackgroundController)
+    backgroundMoving: BackgroundController = null;
+    @property(BackgroundController)
+    floorMoving: BackgroundController = null;
     @property(PipeSpawn)
     pipeSpawn: PipeSpawn = null;
     @property(GameReadyUI)
@@ -52,8 +47,6 @@ export class GameManager extends Component {
     private _isReplaying: boolean = false;
 
     onLoad() {
-        GameManager._instance = this;
-
         // Bird / UI 通过事件通知 GameManager，避免它们反向 import 造成循环依赖
         gameEvents.on(GameEvent.START, this.handleStart, this);
         gameEvents.on(GameEvent.HIT, this.handleHit, this);
@@ -66,10 +59,6 @@ export class GameManager extends Component {
         gameEvents.off(GameEvent.HIT, this.handleHit, this);
         gameEvents.off(GameEvent.SCORE, this.handleScore, this);
         gameEvents.off(GameEvent.REPLAY, this.handleReplay, this);
-
-        if (GameManager._instance === this) {
-            GameManager._instance = null;
-        }
     }
 
     start() {
@@ -114,10 +103,6 @@ export class GameManager extends Component {
         if (scene) {
             director.loadScene(scene.name);
         }
-    }
-
-    update(deltaTime: number) {
-        
     }
 
     transitionToReadyState() {

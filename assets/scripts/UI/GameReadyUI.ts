@@ -1,6 +1,6 @@
 import { _decorator, Component, input, Input } from 'cc';
 import { GameEvent, gameEvents } from '../GameEvents';
-const { ccclass, property } = _decorator;
+const { ccclass } = _decorator;
 
 @ccclass('GameReadyUI')
 export class GameReadyUI extends Component {

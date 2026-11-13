@@ -91,7 +91,7 @@ assets/
     GameData.ts              本局分数与最高分
     AudioMgr.ts              BGM / 音效双 AudioSource
     ScreenAdapter.ts         长屏适配
-    BacgroundController.ts   背景 / 地面无缝滚动
+    BackgroundController.ts  背景 / 地面无缝滚动
     Tags.ts                  碰撞 tag 常量
     UI/GameReadyUI.ts        准备界面
     UI/GameOverUI.ts         结算界面
@@ -111,7 +111,7 @@ GameOverUI ──┘
 - Bird / UI 不反向依赖 `GameManager`，只发 `START / HIT / SCORE / REPLAY` 事件，避免循环依赖。
 - 设计分辨率 `720 × 1280`，宽度固定（fitWidth）；`ScreenAdapter` 负责长屏下背景、地面和遮罩铺满。
 - 管道由 `PipeSpawn` 预生成第一根，`GameManager` 进入 Playing 时统一启用并开始计时；GameOver 时统一暂停。
-- 最高分通过 `sys.localStorage` 保存，Web 与原生通用；key 沿用旧版本的 `BsetScore`，避免已有存档丢失。
+- 最高分通过 `sys.localStorage` 保存，Web 与原生通用；新 key 为 `BestScore`，读取时自动兼容旧 `BsetScore`。
 - `GameManager.addScore()` 按 `Playing` 状态兜底，鸟死后掉出得分传感器不会再加分。
 - BGM 使用 OGG（约 0.47 MB），比原始 WAV 小约 91%。
 

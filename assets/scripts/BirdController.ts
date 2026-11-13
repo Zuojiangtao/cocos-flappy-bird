@@ -6,11 +6,9 @@ const { ccclass, property } = _decorator;
 
 @ccclass('BirdController')
 export class BirdController extends Component {
-    private Red2D:RigidBody2D = null;
-    private _Animation:Animation = null;
+    private _rigidBody: RigidBody2D = null;
+    private _animation: Animation = null;
 
-    @property
-    rorateSpeed: number = 60; // 小鸟旋转速度
     @property(AudioClip)
     clickAudio: AudioClip = null;
     @property(AudioClip)
@@ -29,18 +27,14 @@ export class BirdController extends Component {
             collider.on(Contact2DType.END_CONTACT, this.onEndContact, this);
         }
 
-        this.Red2D = this.getComponent(RigidBody2D); // 获取刚体组件
-        this._Animation = this.getComponent(Animation); // 获取动画组件
-    }
-
-    start() {
-        
+        this._rigidBody = this.getComponent(RigidBody2D); // 获取刚体组件
+        this._animation = this.getComponent(Animation); // 获取动画组件
     }
 
     update(deltaTime: number) {
         if (!this._isControlEnabled) return;
         // 根据小鸟的速度调整角度
-        const velocity = this.Red2D.linearVelocity;
+        const velocity = this._rigidBody.linearVelocity;
         this.node.angle = Math.atan2(velocity.y, velocity.x) * (180 / Math.PI); // 将弧度转换为角度
         // 限制小鸟的最大旋转角度
         if (this.node.angle > 30) {
@@ -68,9 +62,9 @@ export class BirdController extends Component {
 
     /** 扇一下翅膀：给一个向上的速度，并播放点击音效 */
     public flap() {
-        if (!this._isControlEnabled || !this.Red2D) return;
+        if (!this._isControlEnabled || !this._rigidBody) return;
 
-        this.Red2D.linearVelocity = new Vec2(0, 10);
+        this._rigidBody.linearVelocity = new Vec2(0, 10);
         this.node.angle = 30; // 点击时小鸟向上倾斜30度
 
         // 每次点击触发音效
@@ -80,18 +74,18 @@ export class BirdController extends Component {
     public enableControl() {
         this._isControlEnabled = true;
         this._hasHit = false; // 新一局开始，重置撞击标记
-        this.Red2D.enabled = true; // 启用刚体
-        this._Animation.enabled = true; // 播放动画
+        this._rigidBody.enabled = true; // 启用刚体
+        this._animation.enabled = true; // 播放动画
     }
     public disableControl() {
         this._isControlEnabled = false;
-        this.Red2D.enabled = false; // 禁用刚体
-        this._Animation.enabled = false; // 停止动画
+        this._rigidBody.enabled = false; // 禁用刚体
+        this._animation.enabled = false; // 停止动画
     }
 
     public disableControlNotRGD() {
         this._isControlEnabled = false;
-        this._Animation.enabled = false; // 停止动画
+        this._animation.enabled = false; // 停止动画
     }
 
     onBeginContact(selfCollider: Collider2D, otherCollider: Collider2D, contact: IPhysics2DContact | null) {

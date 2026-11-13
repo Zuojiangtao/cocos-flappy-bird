@@ -1273,7 +1273,6 @@
     },
     "_enabled": true,
     "__prefab": null,
-    "rorateSpeed": 60,
     "clickAudio": {
       "__uuid__": "c50e3444-02f7-4eec-aab0-39266d52445e",
       "__expectedType__": "cc.AudioClip"

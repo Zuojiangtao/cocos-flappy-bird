@@ -1,8 +1,8 @@
 import { _decorator, Component, Node, UITransform } from 'cc';
 const { ccclass, property } = _decorator;
 
-@ccclass('BacgroundController')
-export class BacgroundController extends Component {
+@ccclass('BackgroundController')
+export class BackgroundController extends Component {
     @property(Node) bg1: Node = null;
     @property(Node) bg2: Node = null;
     private speed: number = 100;
