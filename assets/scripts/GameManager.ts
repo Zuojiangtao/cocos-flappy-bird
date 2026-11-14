@@ -50,6 +50,12 @@ export class GameManager extends Component {
     private _replayFade: Node = null;
     private _pauseHandler: (() => void) | null = null;
     private _resumeHandler: (() => void) | null = null;
+    /** 上一次适配时铺满的高度，用来检测画布尺寸是否在启动后才确定 */
+    private _fittedHeight = 0;
+    /** 按当前画布尺寸重新铺满场景（背景 / 地面 / 遮罩） */
+    private _relayout = (): void => {
+        this._fittedHeight = ScreenAdapter.fit(this.node.parent);
+    };
 
     onLoad() {
         // Bird / UI 通过事件通知 GameManager，避免它们反向 import 造成循环依赖
@@ -78,6 +84,7 @@ export class GameManager extends Component {
 
         game.off(Game.EVENT_HIDE, this.handleAppHide, this);
         game.off(Game.EVENT_SHOW, this.handleAppShow, this);
+        view.off('canvas-resize', this._relayout);
 
         // 只清理自己挂上去的函数，避免场景重载时误删新 GameManager 的监听
         if ((globalThis as any).__flappyPause === this._pauseHandler) {
@@ -91,8 +98,12 @@ export class GameManager extends Component {
     }
 
     start() {
-        // 长屏适配：背景铺满上下、地面贴底，去掉模拟器/手机上下的黑边
-        ScreenAdapter.fit(this.node.parent);
+        // 长屏适配：背景铺满上下、地面贴底，去掉模拟器/手机上下的黑边。
+        // 注意不能只在 start 里跑一次：首次启动时窗口/画布尺寸往往在 start
+        // 之后才最终确定（原生端是 surface/沉浸式系统栏，编辑器预览是面板
+        // 首次布局），那样 fit 会按旧的 1280 高计算，黑边会一直留在这一局里。
+        this._relayout();
+        view.on('canvas-resize', this._relayout);
 
         // 统一把速度下发给背景/地面/管道：
         // 它们不再反向 import GameManager，这样两边就不会形成循环依赖
@@ -109,6 +120,19 @@ export class GameManager extends Component {
         this.transitionToReadyState();
         AudioMgr.inst.play(this.bgAudio);
         this._bgmPlaying = true;
+    }
+
+    update() {
+        // 兜底：个别平台/预览面板首次布局时不一定会派发 canvas-resize，
+        // 这里直接比对相机当前可见高度，发现尺寸变了就按新尺寸重新铺一次。
+        // 只是几次属性读取，开销可以忽略。
+        const canvas = this.node.parent;
+        if (!canvas) return;
+
+        const visibleHeight = ScreenAdapter.getVisibleHeight(canvas);
+        if (Math.abs(visibleHeight - this._fittedHeight) > 1) {
+            this._relayout();
+        }
     }
 
     private handleStart() {
